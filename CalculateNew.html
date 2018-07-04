@@ -1,0 +1,124 @@
+<!doctype html> <html lang="en">
+  <head>
+    <title>Calculate</title> 
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/style.css"> 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <button onclick="exportTableToExcel('showposition')">Export Table Data To Excel File</button>
+    <table id = "showposition"></table>
+    
+    <script>
+      var arr = [];  
+      var flag = false;
+
+      // start get coordinate csv file.
+      $(document).ready(function() {
+        readCSV();
+      });
+
+      function readCSV(){
+        var csv_val;
+        var json_form;
+        for(var n = 1; n <= 101; n++){
+          json_form = {};
+          json_form.name = n+".csv";
+          arr.push(json_form);
+          csv_val = readSingleCSV(n);
+        }
+        return arr;
+      }
+
+      function readSingleCSV(filename){
+        var result;
+          $.ajax({
+            type: "GET",
+            url: "data/coordinates/" + filename + ".csv",
+            dataType: "text",
+            success: function(data) {
+              result = processData(data);
+              arr[filename-1].coordinates = result;
+              if(filename == 101) {
+                console.log('Read files');
+                flag = true;
+                calculateNew()
+              }
+            }
+        });
+        return result;
+      }
+
+      function processData(allText) {
+        var record_num = 1;
+        var allTextLines = allText.split(/\r/);
+        var entries = allTextLines[0].split('\n');
+        var lines = [];
+        while (entries.length>0) {
+          var tarr = [];
+          for (var j = 0; j < record_num; j++) {
+            tarr.push(entries.shift());
+          }
+          lines.push(tarr);
+        }
+        return lines;
+      }
+      
+      // calculate new coordinate
+      function calculateNew() {
+        var positionString = "";
+        // loop p = coordinate 71 point
+        for(var p = 0; p <= 70; p++) {
+          var sumX = 0;
+          var sumY = 0;
+          var nLoop = 0;
+          
+          // loop i = group
+          for(var i = 0; i <= 2; i++){
+            var str = arr[i].coordinates[p][0];
+            var position = str.split(',');   
+            sumX += Number(position[0]);  
+            sumY += Number(position[1]);
+            nLoop++;
+          }
+          console.log(nLoop);
+          positionString += "<tr> <td>" + (sumX/nLoop).toFixed(2) + "</td>";
+					positionString += "<td>"+ (sumY/nLoop).toFixed(2) +"</td> </tr>";
+        }    
+        document.getElementById('showposition').innerHTML = positionString;      
+      }
+
+      function exportTableToExcel(tableID, filename = ''){
+        var downloadLink;
+        var dataType = 'application/vnd.ms-excel';
+        var tableSelect = document.getElementById(tableID);
+        var tableHTML = tableSelect.outerHTML.replace(/ /g, '%20');
+        
+        // Specify file name
+        filename = filename?filename+'.xls':'excel_data.xls';
+        
+        // Create download link element
+        downloadLink = document.createElement("a");
+        
+        document.body.appendChild(downloadLink);
+        
+        if(navigator.msSaveOrOpenBlob){
+          var blob = new Blob(['\ufeff', tableHTML], {
+            type: dataType
+          });
+          navigator.msSaveOrOpenBlob( blob, filename);
+        }else{
+          // Create a link to the file
+          downloadLink.href = 'data:' + dataType + ', ' + tableHTML;
+        
+          // Setting the file name
+          downloadLink.download = filename;
+          
+          //triggering the function
+          downloadLink.click();
+        }
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,286 @@
+<!doctype html> <html lang="en">
+  <head>
+    <title>Face Size</title> 
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="css/style.css"> 
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <div class="header">
+      <h2>Face Tracking for Z-Size BMI</h2>
+     </div>
+    <div id="content" class="body-all">
+      <div id="container">
+        <canvas id="overlay" width="300" height="300"></canvas>
+      </div>
+      <div class="slidecontainer">
+        <input type="range" class="slider" id="myRange" min="0" max="14" onchange="drawAndCheck(this)" />
+        <div class="text-head">
+            <span id="demo2"></span>
+        </div>
+        <div class="text-bmi">
+          BMI: <span id="demo"></span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      var arr = [];  
+      var flag = false;         
+
+       // set range
+       $(document).ready(function() {
+        $.ajax({
+            type: "GET",
+            url: "data/BMI/group.csv",
+            dataType: "text",
+            success: function(data) {getRangeCSV(data);}
+        });
+      });
+
+      function getRangeCSV(allBMI) {
+        var allBMILines = allBMI.split(/\r/);
+        rangeBMI = allBMILines[0].split('\n');
+
+        $('#myRange').on('change input', function() {
+            var value = rangeBMI[this.value];
+            $("#demo").text(value);
+          }).change();
+
+        var slider = document.getElementById("myRange");
+        var output = document.getElementById("demo2");
+        output.innerHTML = "Group " + (Number(slider.value) + 1);
+
+        slider.oninput = function() {
+          output.innerHTML = "Group " + (Number(this.value) + 1);
+        }
+      }
+
+      function drawAndCheck(obj){
+        if (flag === true) {
+          drawCanvas();
+        }else{
+          console.log("Information is uploading.");
+        }
+      }
+
+      // start get coordinate csv file.
+      $(document).ready(function() {
+        readCSV();
+      });
+
+      function readCSV(){
+        var csv_val;
+        var json_form;
+        for(var n = 1; n <= 15; n++){
+          json_form = {};
+          json_form.name = n+".csv";
+          arr.push(json_form);
+          csv_val = readSingleCSV(n);
+        }
+        return arr;
+      }
+
+      function readSingleCSV(filename){
+        var result;
+          $.ajax({
+            type: "GET",
+            url: "data/coordinates_new/" + filename + ".csv",
+            dataType: "text",
+            success: function(data) {
+              result = processData(data);
+              arr[filename-1].coordinates = result;
+              if(filename == 15) {
+                console.log('Read files');
+                flag = true;
+                drawCanvas();
+              }
+            }
+        });
+        return result;
+      }
+
+      function processData(allText) {
+        var record_num = 1;
+        var allTextLines = allText.split(/\r/);
+        var entries = allTextLines[0].split('\n');
+        var lines = [];
+        while (entries.length>0) {
+          var tarr = [];
+          for (var j = 0; j < record_num; j++) {
+            tarr.push(entries.shift());
+          }
+          lines.push(tarr);
+        }
+        return lines;
+      }
+
+      //start draw canvas
+      function drawCanvas() {
+        console.log("drawCanvas started.");
+        var range_change = document.getElementById("myRange");
+        var canvas = document.getElementById("overlay");
+        var context = canvas.getContext('2d');
+        context.clearRect(0, 0, 300, 300);
+        var radius = .25;
+        var sAngle = 0;
+        var eAngle = 2*Math.PI;   
+        var i=range_change.value;
+        
+        //face
+        var face = canvas.getContext("2d");
+        face.beginPath();
+        for (var p = 0; p <= 14; p++){
+          var str = arr[i].coordinates[p][0];
+          var face_coor = str.split(',');     
+          console.log(face_coor[0]);       
+          console.log(face_coor[1]);                   
+          face.arc(face_coor[0],face_coor[1],radius,sAngle,eAngle);
+          face.strokeStyle = "rgb(130,255,50)";
+          face.stroke();
+        }
+
+        //eyebrow_right
+        var eyebrow_right = canvas.getContext("2d");
+        eyebrow_right.beginPath();
+        for (var p = 15; p <= 18; p++){
+          var str = arr[i].coordinates[p][0];
+          var eyebrow_right_coor = str.split(',');                              
+          eyebrow_right.arc(eyebrow_right_coor[0],eyebrow_right_coor[1],radius,sAngle,eAngle);
+          eyebrow_right.stroke();
+        }
+
+        //eyebrow_left
+        var eyebrow_left = canvas.getContext("2d");
+        eyebrow_left.beginPath();
+        for (var p = 19; p <= 22; p++){
+          var str = arr[i].coordinates[p][0];
+          var eyebrow_left_coor = str.split(',');                              
+          eyebrow_left.arc(eyebrow_left_coor[0],eyebrow_left_coor[1],radius,sAngle,eAngle);
+          eyebrow_left.stroke();
+        }
+
+        //eye_right
+        var eye_right = canvas.getContext("2d");
+        eye_right.beginPath();
+        for (var p = 0; p < 9; p++){
+          var str = [
+                      arr[i].coordinates[23][0], 
+                      arr[i].coordinates[63][0], 
+                      arr[i].coordinates[24][0], 
+                      arr[i].coordinates[64][0], 
+                      arr[i].coordinates[25][0], 
+                      arr[i].coordinates[65][0], 
+                      arr[i].coordinates[26][0], 
+                      arr[i].coordinates[66][0],
+                      arr[i].coordinates[23][0]
+                    ];
+          var eye_right_coor = str[p].split(',');                              
+          eye_right.arc(eye_right_coor[0],eye_right_coor[1],radius,sAngle,eAngle);
+          eye_right.stroke();
+        }
+
+        //eye_left
+        var eye_left = canvas.getContext("2d");
+        eye_left.beginPath();
+        for (var p = 0; p < 9; p++){
+          var str = [
+                      arr[i].coordinates[30][0], 
+                      arr[i].coordinates[68][0], 
+                      arr[i].coordinates[29][0], 
+                      arr[i].coordinates[67][0], 
+                      arr[i].coordinates[28][0], 
+                      arr[i].coordinates[70][0], 
+                      arr[i].coordinates[31][0], 
+                      arr[i].coordinates[69][0],
+                      arr[i].coordinates[30][0]
+                    ];
+          var eye_left_coor = str[p].split(',');                              
+          eye_left.arc(eye_left_coor[0],eye_left_coor[1],radius,sAngle,eAngle);
+          eye_left.stroke();
+        }
+
+        //nose
+        var nose = canvas.getContext("2d");
+        nose.beginPath();
+        for (var p = 0; p < 9; p++){
+          var str = [
+                      arr[i].coordinates[34][0], 
+                      arr[i].coordinates[35][0], 
+                      arr[i].coordinates[36][0], 
+                      arr[i].coordinates[42][0], 
+                      arr[i].coordinates[37][0], 
+                      arr[i].coordinates[43][0], 
+                      arr[i].coordinates[38][0], 
+                      arr[i].coordinates[39][0], 
+                      arr[i].coordinates[40][0]
+                    ];
+          var nose_coor = str[p].split(',');                              
+          nose.arc(nose_coor[0],nose_coor[1],radius,sAngle,eAngle);
+          nose.stroke();
+        }
+
+        //nose_center
+        var nose_center = canvas.getContext("2d");
+        nose_center.beginPath();
+        for (var p = 0; p < 3; p++){
+          var str = [
+                      arr[i].coordinates[33][0], 
+                      arr[i].coordinates[41][0], 
+                      arr[i].coordinates[62][0]
+                    ];
+          var nose_center_coor = str[p].split(',');                              
+          nose_center.arc(nose_center_coor[0],nose_center_coor[1],radius,sAngle,eAngle);
+          nose_center.stroke();
+        }
+
+        //mouth
+        var mouth = canvas.getContext("2d");
+        mouth.beginPath();
+        for (var p = 0; p < 21; p++){
+          var str = [
+                      arr[i].coordinates[44][0], 
+                      arr[i].coordinates[45][0], 
+                      arr[i].coordinates[46][0], 
+                      arr[i].coordinates[47][0], 
+                      arr[i].coordinates[48][0], 
+                      arr[i].coordinates[49][0], 
+                      arr[i].coordinates[50][0], 
+                      arr[i].coordinates[51][0], 
+                      arr[i].coordinates[52][0],
+                      arr[i].coordinates[53][0], 
+                      arr[i].coordinates[54][0], 
+                      arr[i].coordinates[55][0], 
+                      arr[i].coordinates[44][0], 
+                      arr[i].coordinates[56][0], 
+                      arr[i].coordinates[57][0], 
+                      arr[i].coordinates[58][0], 
+                      arr[i].coordinates[50][0], 
+                      arr[i].coordinates[59][0], 
+                      arr[i].coordinates[60][0], 
+                      arr[i].coordinates[61][0], 
+                      arr[i].coordinates[44][0]
+                    ];
+          var mouth_coor = str[p].split(',');                              
+          mouth.arc(mouth_coor[0],mouth_coor[1],radius,sAngle,eAngle);
+          mouth.stroke();
+        }
+
+        //center 2 point
+        var center = canvas.getContext("2d");              
+        for (var p = 0; p < 2; p++){
+          center.beginPath();
+          var str = [
+                      arr[i].coordinates[27][0], 
+                      arr[i].coordinates[32][0]
+                    ];
+          var center_coor = str[p].split(',');                              
+          center.arc(center_coor[0],center_coor[1],0.5,sAngle,eAngle);
+          center.strokeStyle = "rgb(255,255,255)";
+          center.stroke();
+        }  
+      }
+    </script>
+  </body>
+</html>
