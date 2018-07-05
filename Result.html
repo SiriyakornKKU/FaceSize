@@ -7,11 +7,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
   </head>
   <body>
-    <div class="row">
-      <div class="col-6">
-        <div id="myDiv"><!-- Plotly chart will be drawn inside this DIV --></div>
-      </div>
-    </div>    
+    <center><div id="myDiv" class="row"></div></center> 
     <script>
       var value = [16.9, 18.5, 20.1, 21.7, 23.3, 24.9, 26.5, 28.1, 29.7, 31.3, 32.9, 34.5, 36.1, 37.7, 39.3];
       var arr = [];  
@@ -99,8 +95,12 @@
 
           var iDiv = document.createElement('div');
           iDiv.id = divId;
-          document.getElementsByTagName('body')[0].appendChild(iDiv);
+          // document.getElementsByTagName('body')[0].appendChild(iDiv);
+          document.getElementById('myDiv').appendChild(iDiv);
           Plotly.newPlot(divId, data, layout);
+          iDiv.style.width = "50%";
+          // iDiv.style.marginTop = "50px";
+          iDiv.style.border = "1px solid gray";
         }
      }
     </script>
