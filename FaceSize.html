@@ -86,7 +86,7 @@
         var result;
           $.ajax({
             type: "GET",
-            url: "data/coordinates_new/" + filename + ".csv",
+            url: "data/coordinates_group/" + filename + ".csv",
             dataType: "text",
             success: function(data) {
               result = processData(data);

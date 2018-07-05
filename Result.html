@@ -1,0 +1,108 @@
+<!doctype html> <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  </head>
+  <body>
+    <div class="row">
+      <div class="col-6">
+        <div id="myDiv"><!-- Plotly chart will be drawn inside this DIV --></div>
+      </div>
+    </div>    
+    <script>
+      var value = [16.9, 18.5, 20.1, 21.7, 23.3, 24.9, 26.5, 28.1, 29.7, 31.3, 32.9, 34.5, 36.1, 37.7, 39.3];
+      var arr = [];  
+      
+      // start get coordinate csv file.
+      $(document).ready(function() {
+        readCSV();
+      });
+
+      function readCSV(){
+        var csv_val;
+        var json_form;
+        for(var n = 1; n <= 15; n++){
+          json_form = {};
+          json_form.name = n+".csv";
+          arr.push(json_form);
+          csv_val = readSingleCSV(n);
+        }
+        return arr;
+      }
+
+      function readSingleCSV(filename){
+        var result;
+          $.ajax({
+            type: "GET",
+            url: "data/coordinates_group/" + filename + ".csv",
+            dataType: "text",
+            success: function(data) {
+              result = processData(data);
+              arr[filename-1].coordinates = result;
+              if(filename == 15) {
+                console.log('Read files');
+                console.log(arr);
+                plotGraph();
+              }
+            }
+        });
+        return result;
+      }
+
+      function processData(allText) {
+        var record_num = 1;
+        var allTextLines = allText.split(/\r/);
+        var entries = allTextLines[0].split('\n');
+        var lines = [];
+        while (entries.length>0) {
+          var tarr = [];
+          for (var j = 0; j < record_num; j++) {
+            tarr.push(entries.shift());
+          }
+          lines.push(tarr);
+        }
+        return lines;
+      }
+
+      function plotGraph(){
+        
+        for(var p = 0; p <= 70; p++){
+          var data = [];
+          for(var i = 0; i <= 14; i++){
+          var str = arr[i].coordinates[p][0];
+          var position = str.split(',');  
+          var point = {
+            x: [value[i]],
+            y: [position[0]],
+            mode: 'markers',
+            type: 'scatter',
+            name: 'Group ' + Number(i+1),
+            text: ['Group ' + Number(i+1)],
+            marker: { size: 12 }
+          };
+          data.push(point); 
+          }
+          var layout = { 
+            xaxis: {
+              title: 'BMI',
+            },
+            yaxis: {
+              title: 'x' + p
+            },
+            title:'x' + p
+          }
+          //divClassName
+          var divId = 'div-'+p;
+
+          var iDiv = document.createElement('div');
+          iDiv.id = divId;
+          document.getElementsByTagName('body')[0].appendChild(iDiv);
+          Plotly.newPlot(divId, data, layout);
+        }
+     }
+    </script>
+  </body>
+</html>
