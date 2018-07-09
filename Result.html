@@ -64,43 +64,44 @@
       }
 
       function plotGraph(){
-        
-        for(var p = 0; p <= 70; p++){
-          var data = [];
-          for(var i = 0; i <= 14; i++){
-          var str = arr[i].coordinates[p][0];
-          var position = str.split(',');  
-          var point = {
-            x: [value[i]],
-            y: [position[0]],
-            mode: 'markers',
-            type: 'scatter',
-            name: 'Group ' + Number(i+1),
-            text: ['Group ' + Number(i+1)],
-            marker: { size: 12 }
-          };
-          data.push(point); 
+        for(var p = 0; p <= 70; p++){      
+          for(var r = 0; r <= 1; r++){
+            var data = [];
+            for(var i = 0; i <= 14; i++){
+              var str = arr[i].coordinates[p][0];
+              var position = str.split(',');  
+              var setPosition = position[r];
+              var setTitle = r ? 'y' : 'x';
+              var point = {
+                x: [value[i]],
+                y: [setPosition],
+                mode: 'markers',
+                type: 'scatter',
+                name: 'Group ' + Number(i+1),
+                text: ['Group ' + Number(i+1)],
+                marker: { size: 12 }
+              };
+              data.push(point); 
+            }
+          
+            var layout = { 
+              xaxis: {
+                title: 'BMI',
+              },
+              yaxis: {
+                title: setTitle + p
+              },
+              title: setTitle + p
+            }
+            //divClassName
+            var divId = 'div-' + setTitle + p;
+            var iDiv = document.createElement('div');
+            iDiv.id = divId;
+            document.getElementById('myDiv').appendChild(iDiv);
+            Plotly.newPlot(divId, data, layout);
+            iDiv.style.width = "50%";
+            iDiv.style.border = "1px solid gray";
           }
-          var layout = { 
-            xaxis: {
-              title: 'BMI',
-            },
-            yaxis: {
-              title: 'x' + p
-            },
-            title:'x' + p
-          }
-          //divClassName
-          var divId = 'div-'+p;
-
-          var iDiv = document.createElement('div');
-          iDiv.id = divId;
-          // document.getElementsByTagName('body')[0].appendChild(iDiv);
-          document.getElementById('myDiv').appendChild(iDiv);
-          Plotly.newPlot(divId, data, layout);
-          iDiv.style.width = "50%";
-          // iDiv.style.marginTop = "50px";
-          iDiv.style.border = "1px solid gray";
         }
      }
     </script>
